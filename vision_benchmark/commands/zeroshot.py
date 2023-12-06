@@ -98,13 +98,13 @@ def main():
     config.freeze()
 
     # save the config file to a yaml file, for use in REAL code
-    filepath = '../../TailVLM_ablations/imagenet_clip_creact_zeroshot_config.yaml'
+    filepath = '../../TailVLM_ablations/imagenet_clip_react_zeroshot_config.yaml'
     with open(filepath, 'w') as f:
         f.write(config.dump())
     print(f'=> config saved to: {filepath}')
 
     # load the config file from yaml file
-    # config.merge_from_file('imagenet_clip_creact_zeroshot_config.yaml')
+    # config.merge_from_file('imagenet_clip_react_zeroshot_config.yaml')
     # config.freeze()
 
     exp_name = 'zeroshot_eval_' + f'wiki_{config.KNOWLEDGE.WIKITIONARY.USE_DEFINITION}_wnh_{config.KNOWLEDGE.WORDNET.USE_HIERARCHY}_wnd_{config.KNOWLEDGE.WORDNET.USE_DEFINITION}_gpt3_{config.KNOWLEDGE.GPT3.USE_GPT3}'
