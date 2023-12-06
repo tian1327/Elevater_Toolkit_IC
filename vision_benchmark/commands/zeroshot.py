@@ -98,7 +98,7 @@ def main():
     config.freeze()
 
     # save the config file to a yaml file, for use in REAL code
-    filepath = '../../TailVLM_ablations/imagenet_clip_react_zeroshot_config.yaml'
+    filepath = '../../REAL_dev/imagenet_clip_react_zeroshot_config.yaml'
     with open(filepath, 'w') as f:
         f.write(config.dump())
     print(f'=> config saved to: {filepath}')
