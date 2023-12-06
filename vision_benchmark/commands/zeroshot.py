@@ -98,9 +98,10 @@ def main():
     config.freeze()
 
     # save the config file to a yaml file, for use in REAL code
-    with open('../../TailVLM_ablations/imagenet_clip_creact_zeroshot_config.yaml', 'w') as f:
+    filepath = '../../TailVLM_ablations/imagenet_clip_creact_zeroshot_config.yaml'
+    with open(filepath, 'w') as f:
         f.write(config.dump())
-    print('=> config saved to imagenet_clip_creact_zeroshot_config.yaml')
+    print(f'=> config saved to: {filepath}')
 
     # load the config file from yaml file
     # config.merge_from_file('imagenet_clip_creact_zeroshot_config.yaml')

@@ -617,10 +617,11 @@ def extract_text_features(config, tokenizer, args=None, model=None, return_numpy
     if return_numpy:
         result = zeroshot_weights.cpu().detach().numpy()
         print(f'result.shape: {result.shape}')
+        
         # save the zeroshot_weights to file
-        with open(f'zeroshot_weights_{config.DATASET.DATASET}.np', 'wb') as f:
-            np.save(f, result)
-        print(f'Saved zeroshot_weights to file: zeroshot_weights_{config.DATASET.DATASET}.np')
+        # with open(f'zeroshot_weights_{config.DATASET.DATASET}.npy', 'wb') as f:
+        #     np.save(f, result)
+        # print(f'Saved zeroshot_weights to file: zeroshot_weights_{config.DATASET.DATASET}.npy')
        
         return result
     else:
