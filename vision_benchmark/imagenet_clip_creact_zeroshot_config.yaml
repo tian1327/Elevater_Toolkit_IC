@@ -1,0 +1,198 @@
+AMP:
+  ENABLED: false
+  MEMORY_FORMAT: nchw
+AUG:
+  COLOR_JITTER:
+  - 0.4
+  - 0.4
+  - 0.4
+  - 0.1
+  - 0.0
+  DROPBLOCK_BLOCK_SIZE: 7
+  DROPBLOCK_KEEP_PROB: 1.0
+  DROPBLOCK_LAYERS:
+  - 3
+  - 4
+  GAUSSIAN_BLUR: 0.0
+  GRAY_SCALE: 0.0
+  MIXCUT: 0.0
+  MIXCUT_AND_MIXUP: false
+  MIXCUT_MINMAX: []
+  MIXUP: 0.0
+  MIXUP_MODE: batch
+  MIXUP_PROB: 0.0
+  MIXUP_SWITCH_PROB: 0.5
+  RANDOM_CENTER_CROP: false
+  RATIO:
+  - 0.75
+  - 1.3333333333333333
+  SCALE:
+  - 0.08
+  - 1.0
+  TIMM_AUG:
+    USE_LOADER: false
+    USE_TRANSFORM: false
+BASE:
+- ''
+CUDNN:
+  BENCHMARK: true
+  DETERMINISTIC: false
+  ENABLED: true
+DATASET:
+  CENTER_CROP: true
+  COCO:
+    BALANCE_DATA: true
+    SCALES:
+    - m
+    - l
+  DATASET: imagenet-1k
+  DATA_FORMAT: jpg
+  IMAGE_SIZE:
+  - 224
+  LABELMAP: ''
+  MERGE_TRAIN_VAL_FINAL_RUN: true
+  NUM_CLASSES: 0
+  NUM_SAMPLES_PER_CLASS: -1
+  RANDOM_SEED_SAMPLING: 0
+  ROOT: ./outputs/datasets
+  TARGET_SIZE: -1
+  TEST_SET: val
+  TEST_TSV_LIST: []
+  TRAIN_SET: train
+  TRAIN_TSV_LIST: []
+  VAL_SET: ''
+DATA_DIR: ''
+DEBUG:
+  DEBUG: false
+DEEPSPEED: {}
+DIST_BACKEND: nccl
+FINETUNE:
+  BASE_LR: 0.003
+  BATCH_SIZE: 512
+  EVAL_EVERY: 3000
+  FINETUNE: false
+  FROZEN_LAYERS: []
+  USE_TRAIN_AUG: false
+GPUS:
+- 0
+INPUT:
+  MEAN:
+  - 0.48145466
+  - 0.4578275
+  - 0.40821073
+  STD:
+  - 0.26862954
+  - 0.26130258
+  - 0.27577711
+KNOWLEDGE:
+  AGGREGATION:
+    MEHTOD: WIKI_AND_GPT3
+    NUM_GPT3_ITEMS: 0
+  GPT3:
+    GPT3_DICT_PATH: resources/knowledge/gpt3
+    USE_GPT3: false
+  WIKITIONARY:
+    USE_DEFINITION: false
+    WIKI_DICT_PATH: resources/knowledge/external
+  WORDNET:
+    USE_DEFINITION: false
+    USE_HIERARCHY: false
+LOSS:
+  FOCAL:
+    ALPHA: 1.0
+    GAMMA: 0.5
+    NORMALIZE: true
+  LABEL_SMOOTHING: 0.0
+  LOSS: softmax
+MODEL:
+  AUTHOR: Haotian Liu
+  CLIP_FP32: true
+  CREATION_TIME: '2021-01-05'
+  INIT_WEIGHTS: true
+  NAME: clip_react
+  NUM_CLASSES: 1000
+  NUM_PARAMS_IN_M: 151.2
+  PRETRAINED: ''
+  PRETRAINED_DATA: CLIP-data/REACT-data
+  PRETRAINED_LAYERS:
+  - '*'
+  SPEC:
+    EMBED_DIM: 512
+    RCP_BLOCK:
+      GUMBEL_SAMPLE: false
+      MODE: gated_attn
+      USE_LAST_K: 6
+    TEXT:
+      CONTEXT_LENGTH: 77
+      HEADS: 8
+      LAYERS: 12
+      STYLE: clip
+      TOKENIZER: clip
+      USE_RCP_BLOCK: false
+      VOCAB_SIZE: 49408
+      WIDTH: 512
+    VISION:
+      LAYERS: 12
+      MODEL: vit
+      PATCH_SIZE: 32
+      USE_RCP_BLOCK: true
+      WIDTH: 768
+  STATS: {}
+MULTIPROCESSING_DISTRIBUTED: true
+NAME: ''
+OUTPUT_DIR: ./outputs/react_vitb32_CLIP/log
+PIN_MEMORY: true
+PRINT_FREQ: 20
+RANK: 0
+TEST:
+  BATCH_SIZE_PER_GPU: 128
+  CENTER_CROP: true
+  IMAGE_SIZE:
+  - 224
+  - 224
+  INTERPOLATION: 2
+  METRIC: accuracy
+  MODEL_FILE: hf:react-vl/react-in1k:openclip-vit-base-32-gated-image.pt
+  REAL_LABELS: false
+  VALID_LABELS: ''
+TRAIN:
+  AUTO_RESUME: true
+  BATCH_SIZE_PER_GPU: 64
+  BEGIN_EPOCH: 0
+  CHECKPOINT: ''
+  CLIP_GRAD_NORM: 0.0
+  END_EPOCH: 10
+  EVAL_BEGIN_EPOCH: 0
+  EXTRA_FINAL_TRAIN_EPOCH: 40
+  FREEZE_IMAGE_BACKBONE: false
+  GAMMA1: 0.99
+  GAMMA2: 0.0
+  IMAGE_SIZE:
+  - 224
+  - 224
+  INIT_HEAD_WITH_TEXT_ENCODER: false
+  LOGIT_SCALE_INIT: none
+  LR: 0.001
+  LR_SCHEDULER:
+    METHOD: WarmupCosine
+    WARMUP_EPOCH: 5
+  MERGE_ENCODER_AND_HEAD_PROJ: false
+  MOMENTUM: 0.9
+  NESTEROV: false
+  NORMALIZE_VISUAL_FEATURE: false
+  OPTIMIZER: sgd
+  OPTIMIZER_ARGS: {}
+  SCHEDULE: []
+  SEARCH_RESULT_ON_LAST_EPOCH: false
+  SEARCH_WD_LOG_LOWER: -6
+  SEARCH_WD_LOG_UPPER: 6
+  SHUFFLE: true
+  TRAINABLE_LOGIT_SCALE: false
+  TWO_LR: false
+  USE_CHANNEL_BN: true
+  WD: 0.0
+  WD_SEARCH_LEFT: false
+  WITHOUT_WD_LIST: []
+USE_DEEPSPEED: false
+VERBOSE: true
+WORKERS: 4

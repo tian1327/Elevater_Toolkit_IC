@@ -1,3 +1,8 @@
+# debug temp files, including saved ckpt, npy
+*.pth 
+*.npy
+
+
 # IntelliJ project files
 .idea
 *.iml

@@ -13,7 +13,8 @@ use_fp32=True
 dataset=imagenet-1k
 
 # Model checkpoint
-model_ckpt=hf:react-vl/react-in1k:openclip-vit-base-32-locked-text.pt
+# model_ckpt=hf:react-vl/react-in1k:openclip-vit-base-32-locked-text.pt
+model_ckpt=hf:react-vl/react-in1k:openclip-laion2b-vit-base-32-locked-text.pt
 
 # output directory
 output_dir=./outputs

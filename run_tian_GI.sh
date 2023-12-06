@@ -14,6 +14,10 @@ dataset=imagenet-1k
 
 # Model checkpoint
 model_ckpt=hf:react-vl/react-in1k:openclip-vit-base-32-gated-image.pt
+# model_ckpt=hf:react-vl/react-in1k:openclip-laion2b-vit-base-32-gated-image.pt
+# model_ckpt=../../TailVLM_ablations/data/react_weights/openclip-vit-base-32-gated-image.pt
+# model_ckpt=../../TailVLM_ablations/data/react_weights/openclip-laion2b-vit-base-32-gated-image.pt
+
 
 # output directory
 output_dir=./outputs

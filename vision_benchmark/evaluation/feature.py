@@ -23,6 +23,8 @@ from .metric import get_metric
 from ..common.constants import get_dataset_hub, VISION_DATASET_STORAGE
 
 from ..models import *
+# from ..models import clip_react
+
 from ..datasets import class_map, template_map
 
 from PIL import Image
@@ -213,22 +215,29 @@ def load_custom_ic_model(config):
     model.load_state_dict(state_dict)
     return model
 
-
+# ++++++
 def load_custom_zeroshot_model(config):
     logging.info(f'=> Loading custom model {config.MODEL.NAME}.')
     torch.device("cuda")
 
-    model = eval(config.MODEL.NAME + '.get_zeroshot_model')(config)
+    model = eval(config.MODEL.NAME + '.get_zeroshot_model')(config) # ++++++++
+    # print(f'+++++ model: {model}')
+
+
     model_file = config.TEST.MODEL_FILE
     logging.info(f'=> load model file: {model_file}')
     ext = model_file.split('.')[-1]
+
     if model_file.startswith('hf:'):
         from huggingface_hub import hf_hub_download
         _, hf_repo, hf_file = model_file.split(':')
         cache_file = hf_hub_download(repo_id=hf_repo, filename=hf_file)
+        print('cache_file:', cache_file)
         state_dict = torch.load(cache_file, map_location='cpu')
+
     elif ext == 'pth' or ext == 'pt':
         state_dict = torch.load(model_file, map_location="cpu")
+
     elif ext == 'pkl':
         logging.info('=> load pkl model')
         with open(model_file, 'rb') as f:
@@ -238,17 +247,27 @@ def load_custom_zeroshot_model(config):
             state_dict[k] = torch.from_numpy(v)
     else:
         raise ValueError(f'=> Unknown model file, with ext {ext}')
+
     msg = model.load_state_dict(state_dict, strict=False)
     print(f'loading checkpoint msg: {msg}')
+
+    # save the model to file
+    # with open(f'Elevater_model_{config.DATASET.DATASET}.pth', 'wb') as f:
+    #     torch.save(model, f)
+    # print(f'Saved model to file: Elevater_model_{config.DATASET.DATASET}.pth')
+
     return model
 
 
 def get_model(config, feature_type='image'):
+
     model_name = config.MODEL.NAME
+    print('model_name:', model_name)
     if model_name in dir(torchvision.models):
         model_pretrained = eval('torchvision.models.' + model_name)(pretrained=True)
         model = EvalModel(model_pretrained)
         logging.info(f'Using Pytorch pretrained model {model_name}')
+
     elif model_name in timm.list_models(pretrained=True):
         model = timm.create_model(model_name, pretrained=True)
         if model_name.startswith('efficientnet'):
@@ -258,12 +277,15 @@ def get_model(config, feature_type='image'):
         else:
             raise Exception('Please define Timm feature extraction model.')
         logging.info(f'Using Timm pretrained model {model_name}')
+
     elif model_name.startswith('cls_'):
         model = load_custom_ic_model(config)
         model.forward = model.forward_features
+
     elif model_name.startswith('mae_'):
         model = mae.get_model(config)
         model.forward = model.forward_features
+
     elif model_name.startswith('declip_') or model_name.startswith('slip_') or model_name.startswith('clip_yfcc_'):
         model = declip.get_model(config)
         if feature_type == 'image':
@@ -287,8 +309,10 @@ def get_model(config, feature_type='image'):
     elif model_name.startswith('mocov3_'):
         model = mocov3.get_model(config)
         model.forward = model.forward_features
+
     elif model_name.startswith('clip_'):
-        model = load_custom_zeroshot_model(config)
+        model = load_custom_zeroshot_model(config) # ++++++ load the custom zeroshot model
+        print('+++++ loaded custom zeroshot model')
 
         if config.LOSS.LOSS == 'softmax':
             if feature_type == 'image':
@@ -297,6 +321,7 @@ def get_model(config, feature_type='image'):
                 model.forward = model.encode_text
             else:
                 raise Exception('Incorrect model type')
+
         elif config.LOSS.LOSS == 'contrast':
             logging.info(f'Training objective: { config.LOSS.LOSS }.')
 
@@ -323,8 +348,10 @@ def get_model(config, feature_type='image'):
                     _, hf_repo, hf_file = model_file.split(':')
                     cache_file = hf_hub_download(repo_id=hf_repo, filename=hf_file)
                     checkpoint = torch.load(cache_file, map_location='cpu')
+
                 elif model_file.startswith('http'):
                     checkpoint = torch.hub.load_state_dict_from_url(model_file, progress=False, map_location="cpu")
+
                 else:
                     checkpoint = torch.load(model_file, map_location="cpu")
 
@@ -340,6 +367,7 @@ def get_model(config, feature_type='image'):
 
     pytorch_total_params = sum(p.numel() for p in model.parameters())
     logging.info(f'Number of params: {pytorch_total_params / 1000000}M.')
+
     return model
 
 
@@ -391,14 +419,26 @@ def multiclass_to_int(indices):
 
 def extract_features(config, feature_type="image", test_split_only=False):
     model = get_model(config, feature_type=feature_type)
+    # save the model to file
+    with open(f'model_{config.DATASET.DATASET}.pth', 'wb') as f:
+        torch.save(model, f)
+    print(f'Saved model to file: model_{config.DATASET.DATASET}.pth')
+
+    # with open(f'model_{config.DATASET.DATASET}.pkl', 'wb') as f:
+    #     pickle.dump(model, f)
+    # print(f'Saved model to file: model_{config.DATASET.DATASET}.pkl')
 
     train_dataloader, val_dataloader, test_dataloader = construct_dataloader(config, feature_type="image", test_split_only=test_split_only)
 
-    test_features, test_labels = extract_feature(model, test_dataloader, config)
+    test_features, test_labels = extract_feature(model, test_dataloader, config) # ++++++
+
+
     if test_split_only:
         return test_features, test_labels
+
     train_features, train_labels = extract_feature(model, train_dataloader, config)
     val_features, val_labels = extract_feature(model, val_dataloader, config)
+
     return train_features, train_labels, val_features, val_labels, test_features, test_labels
 
 def hypernyms_chain(concept):
@@ -430,8 +470,13 @@ def concept_definition(concept):
 
 @torch.no_grad()
 def extract_text_features(config, tokenizer, args=None, model=None, return_numpy=True):
+    print('+++++ extract_text_features')
+    print('+++++ config')
+    print(config)
+    
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     class_names = class_map.get(config.DATASET.DATASET)
+
     if not class_names:
         hub = get_dataset_hub()
         from vision_datasets import Usages
@@ -497,8 +542,13 @@ def extract_text_features(config, tokenizer, args=None, model=None, return_numpy
         return wiki_dict, gpt3_dict
     
     templates = template_map.get(config.DATASET.DATASET, ['a photo of a {}'])
+    print('+++++ len(templates):', len(templates))
+    # print('+++++ templates:', templates)
+
     if model is None:
-        model = get_model(config, feature_type='text')
+        print('+++++ model is None, get_model(config, feature_type=text)')
+        model = get_model(config, feature_type='text') # ++++ get the model for loading text features
+
     start = time.time()
     model.to(device)
     model.eval()
@@ -536,23 +586,43 @@ def extract_text_features(config, tokenizer, args=None, model=None, return_numpy
         else:
             texts = [template.format(classname) + knowledge_text for knowledge_text in knowledge_text_list_aug for template in templates ]
 
+        # print('texts:', texts)
         if not config.MODEL.SPEC.TEXT.get('SKIP_TOKENIZE', False):
             texts = tokenizer(texts, context_length=config.MODEL.SPEC.TEXT.CONTEXT_LENGTH).to(device)
+        # print('+++++ text tokens[0][:10]:', texts[0][:10])
 
+        # print('+++++ config.MODEL.SPEC.get(DENSE_EVAL, False):', config.MODEL.SPEC.get('DENSE_EVAL', False))
         if config.MODEL.SPEC.get('DENSE_EVAL', False):
+            # print('+++++ model.encode_text_dense(texts)')
             class_embeddings = model.encode_text_dense(texts)
         else:
-            class_embeddings = model.encode_text(texts)
+            # print('+++++ model.encode_text(texts)')
+            class_embeddings = model.encode_text(texts) # +++++ goes here
+        
+        # print(f'+++++ class_embeddings.shape: {class_embeddings.shape}')
+        # print('class_embeddings[0][:10]:', class_embeddings[0][:10])
+        # stop
+
         class_embeddings /= class_embeddings.norm(dim=-1, keepdim=True)
         class_embedding = class_embeddings.mean(dim=0)
         class_embedding /= class_embedding.norm()
         zeroshot_weights.append(class_embedding)
+
     zeroshot_weights = torch.stack(zeroshot_weights, dim=1).to(device)
+    print(f'+++++ zeroshot_weights.shape: {zeroshot_weights.shape}')
+
     logging.info(f'=> Feature extraction duration time: {time.time() - start:.2f}s')
     logging.info(f'=> Knowledge source count | knowledge_count: {wiki_count} | gpt3_count {gpt3_count} ')
 
     if return_numpy:
-        return zeroshot_weights.cpu().detach().numpy()
+        result = zeroshot_weights.cpu().detach().numpy()
+        print(f'result.shape: {result.shape}')
+        # save the zeroshot_weights to file
+        with open(f'zeroshot_weights_{config.DATASET.DATASET}.np', 'wb') as f:
+            np.save(f, result)
+        print(f'Saved zeroshot_weights to file: zeroshot_weights_{config.DATASET.DATASET}.np')
+       
+        return result
     else:
         return zeroshot_weights
 
@@ -595,6 +665,7 @@ def construct_dataloader(config, feature_type="image", test_split_only=False):
             def transform_clip(x, y):
                 test_set_ = ManifestDataset(test_set_dataset_info, test_set)
                 return (previous_transform(x), multilabel_to_vec(y, len(test_set_.labels)))
+
         elif test_set_dataset_info.type == DatasetTypes.IC_MULTICLASS:
             previous_transform = transform_clip
 

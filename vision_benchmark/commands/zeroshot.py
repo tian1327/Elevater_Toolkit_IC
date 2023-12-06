@@ -8,9 +8,8 @@ from __future__ import print_function
 import os
 import argparse
 import logging
-
+import pickle
 import numpy as np
-
 from vision_benchmark.common.utils import log_arg_env_config
 from vision_benchmark.utils import comm, create_logger
 from vision_benchmark.datasets import SimpleTokenizer, HFPTTokenizer
@@ -29,10 +28,14 @@ def add_zero_shot_args(parser):
                         nargs=argparse.REMAINDER)    
 
 def load_or_extract_features(args, cfg):
+    print('cfg.MODEL.SPEC.TEXT.TOKENIZER:', cfg.MODEL.SPEC.TEXT.TOKENIZER)
     if cfg.MODEL.SPEC.TEXT.TOKENIZER == 'clip':
         tokenizer = SimpleTokenizer()
+        print('use Simple tokenizer')
+
     elif 'hf_' in cfg.MODEL.SPEC.TEXT.TOKENIZER:
         tokenizer = HFPTTokenizer(pt_name=cfg.MODEL.SPEC.TEXT.TOKENIZER[3:])
+        print('hf tokenizer', tokenizer)
     else:
         tokenizer = None
 
@@ -46,9 +49,16 @@ def load_or_extract_features(args, cfg):
             text_features = np.load(fread)
             image_labels = np.load(fread)
     else:
-        image_features, image_labels = extract_features(cfg, test_split_only=True)
-        text_features = extract_text_features(cfg, tokenizer, args)
+        print("+++++ extracting features")
+        text_features = extract_text_features(cfg, tokenizer, args) # +++++ extract text features
+
+        image_features, image_labels = extract_features(cfg, test_split_only=True) # +++++
+
+        
+
     logging.info(f'Test size is {image_features.shape[0]}.')
+
+    # check the extracted feature see if they are the same
 
     return image_features, text_features, image_labels
 
@@ -80,24 +90,36 @@ def main():
 
     args.cfg = args.ds
     update_config(config, args)
+    
     args.cfg = args.model
     update_config(config, args)
     config.defrost()
     config.NAME = ""
     config.freeze()
 
+    # save the config file to a yaml file, for use in REAL code
+    with open('../../TailVLM_ablations/imagenet_clip_creact_zeroshot_config.yaml', 'w') as f:
+        f.write(config.dump())
+    print('=> config saved to imagenet_clip_creact_zeroshot_config.yaml')
+
+    # load the config file from yaml file
+    # config.merge_from_file('imagenet_clip_creact_zeroshot_config.yaml')
+    # config.freeze()
+
     exp_name = 'zeroshot_eval_' + f'wiki_{config.KNOWLEDGE.WIKITIONARY.USE_DEFINITION}_wnh_{config.KNOWLEDGE.WORDNET.USE_HIERARCHY}_wnd_{config.KNOWLEDGE.WORDNET.USE_DEFINITION}_gpt3_{config.KNOWLEDGE.GPT3.USE_GPT3}'
     exp_name += f'agg_{config.KNOWLEDGE.AGGREGATION.MEHTOD}_gpt3count_{config.KNOWLEDGE.AGGREGATION.NUM_GPT3_ITEMS}'
     final_output_dir = create_logger(config, exp_name)
+    print('=> final_output_dir:', final_output_dir)
 
-    if comm.is_main_process():
-        log_arg_env_config(args, config, final_output_dir)
+    # if comm.is_main_process():
+    #     log_arg_env_config(args, config, final_output_dir)
 
+    print("args.text_feature_only:", args.text_feature_only)
     if args.text_feature_only:
         wiki_dict, gpt3_dict = load_or_extract_text_features(args, config)
 
     else:
-        image_features, text_features, image_labels = load_or_extract_features(args, config)
+        image_features, text_features, image_labels = load_or_extract_features(args, config) # +++++
         result, test_predictions, metric = clip_zeroshot_evaluator(image_features, text_features, image_labels, config)
         msg = f'=> TEST: {metric} {100 * result:.3f}% '
         logging.info(msg)
