@@ -7,7 +7,8 @@ model_cfg=vitb32_CLIP
 mode=zeroshot
 
 # Use FP32 [default: True]
-use_fp32=True
+# use_fp32=True
+use_fp32=False
 
 # Dataset: [caltech101]
 dataset=imagenet-1k

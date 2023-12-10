@@ -7,14 +7,15 @@ model_cfg=react_vitb32_CLIP
 mode=zeroshot
 
 # Use FP32 [default: True]
-use_fp32=True
+# use_fp32=True
+use_fp32=False
 
 # Dataset: [caltech101]
 dataset=imagenet-1k
 
 # Model checkpoint
-model_ckpt=hf:react-vl/react-in1k:openclip-vit-base-32-gated-image.pt
-# model_ckpt=hf:react-vl/react-in1k:openclip-laion2b-vit-base-32-gated-image.pt
+# model_ckpt=hf:react-vl/react-in1k:openclip-vit-base-32-gated-image.pt
+model_ckpt=hf:react-vl/react-in1k:openclip-laion2b-vit-base-32-gated-image.pt
 # model_ckpt=../../TailVLM_ablations/data/react_weights/openclip-vit-base-32-gated-image.pt
 # model_ckpt=../../TailVLM_ablations/data/react_weights/openclip-laion2b-vit-base-32-gated-image.pt
 
